@@ -29,16 +29,14 @@ async function makeImage() {
     crutches(mainBlob)
 }
 
-function makeSpine(v1, v2,startDir, sumPoints = 10) {
-    const targetDir = v2.subtract(v1).normalize()
-    const distance = v1.getDistance(v2)
-    const dir = pointFromAngle(startDir).multiply(distance/sumPoints)
-    const startPoint = v1.clone()
-    const path = new Path()
-    for (let i = 0; i <= sumPoints; i++) {
-        const p = startPoint.clone()
-        const p2 = p.add(dir.multiply(random(-50, 50)))
-        path.add(p2)
+function makeSpine(v1, v2) {
+    const dir = v2.subtract(v1).normalize().rotate(random(-90,90)).multiply(150)
+    const seg1 = new Segment(v1,null, dir)
+    let path = new Path(seg1, v2)
+    path = path.rebuild(4)
+    for (let i=1;i<path.segments.length-1;i++){
+        const seg = path.segments[i]
+        seg.point = seg.point.add(seg.location.normal.multiply(random(-30,30)))
     }
     path.smooth()
     return path
@@ -55,7 +53,6 @@ function Limb(p1,p2,r1,r2){
         blob.join(new Blob(c))
     }
     blob.apply(crv=>crv.simplify(30))
-    blob.apply(crv=>crv.wonky().blocky())
     crv.remove()
     return blob
 }
@@ -70,12 +67,12 @@ function makeMainBlob(){
         mainBlob.join(blob)
     }
 
-    // for (let i=0;i<5;i++){
-        mainBlob.join(Limb(centerPoint,centerPoint.add(p(0,-400)),35,10))
-    // }
-    // for (let i=0;i<10;i++){
-    //     mainBlob.join(new Blob(new Path.Circle(mainBlob.randomOnBorder().point, random(10,20)).wonky()))
-    // }
+    for (let i=0;i<2;i++){
+        mainBlob.join(Limb(centerPoint,centerPoint.add(pointFromAngle(random(360)).multiply(random(200,400))),35,10))
+    }
+    for (let i=0;i<30;i++){
+        mainBlob.join(new Blob(new Path.Circle(mainBlob.randomOnBorder().point, random(10,20)).wonky()))
+    }
     // for (let i=0;i<mainBlob.path.length;i+=50){
     //     mainBlob.join(new Blob(new Path.Circle(mainBlob.path.getPointAt(i), random(10,20)).wonky()))
     // }
