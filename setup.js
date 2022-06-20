@@ -1,10 +1,11 @@
 function setup(){
-    canvas = createCanvas(windowWidth, windowHeight)
+    canvas = createCanvas(1000, 1000)
     paperCanvas = document.getElementById('paperCanvas');
     paperCanvas.width = width;
     paperCanvas.height = height
     pixelSize = 1
     canvas.elt.style.display = 'none';
+    // paperCanvas.style.display = 'none';
     paper.setup(paperCanvas);
 
     CORNERS = {

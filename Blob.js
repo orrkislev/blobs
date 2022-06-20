@@ -1,13 +1,30 @@
 class Blob {
     constructor(path) {
-        this.path = path
         this.group = new Group([this.path])
         this.paintPaths = new Group()
         this.group.addChild(this.paintPaths)
+        this.path = path
     }
 
-    apply(func){
-        this.getPaths().forEach(path => func(path) )
+    apply(func) {
+        this.getPaths().forEach(path => func(path))
+    }
+
+    drawCurvesp5(){
+        erase()
+        fill(0)
+        this.apply(path=>fillPath(path))
+        noErase()
+        noFill()
+
+        this.apply(path=>drawPath(path))
+
+        if (this.folds) this.folds.children.forEach(fold=>drawPath(fold))
+        if (this.spots) 
+            this.spots.children.forEach(spot=>{
+                if (spot.data.withStroke) drawPath(spot,0.4)
+            })
+        if (this.hair) this.hair.children.forEach(hair=>drawPath(hair))
     }
 
     getPaths() {
@@ -15,13 +32,27 @@ class Blob {
         return [this.path]
     }
 
-    initDraw(){
+    getMask(){
+        if (this.path.children) {
+            const newMask = this.path.clone()
+            newMask.children.forEach(path => {
+                path.wonky(0.96,1.04, seg=>
+                    random()<0.2 && !(path.contains(seg.point.add(seg.handleIn)) && path.contains(seg.point.add(seg.handleOut))))
+            })
+            return newMask
+        }
+        return this.path.clone().wonky(0.96,1.04, seg=>
+                random()<0.2 && !(this.path.contains(seg.point.add(seg.handleIn)) && this.path.contains(seg.point.add(seg.handleOut))))
+    }
+
+    initDraw() {
         this.bg = this.path.clone()
         this.bg.fillColor = 'white'
         this.group.addChild(this.bg)
         this.bg.sendToBack()
         this.path.strokeColor = pencil
         this.drawFolds(this.path)
+        this.path.bringToFront()
     }
 
     draw(fillColor) {
@@ -31,12 +62,14 @@ class Blob {
 
     paint(fillColor) {
         this.initDraw()
-        this.path.waterColor(fillColor, this)
+        this.apply(path=>path.waterColor(fillColor, this))
+        this.apply(path=>path.waterColor(fillColor, this))
     }
 
     shadows(angleOffset, clr) {
         this.shadowPaths = new Group()
         this.group.addChild(this.shadowPaths)
+        const offsetSize = random(20,40)
         this.getPaths().forEach(path => {
             let groups = []
             let points = []
@@ -48,7 +81,7 @@ class Blob {
                 offset = offset + (newOffset - offset) / 10
                 if (offset < 0) {
                     if (points.length == 0) points.push(i)
-                    points.push(loc.point.add(loc.normal.multiply(offset)))
+                    points.push(loc.point.add(loc.normal.multiply(round(offset/offsetSize)*offsetSize)))
                 } else if (points.length > 0) {
                     points.push(i)
                     groups.push([...points])
@@ -79,21 +112,32 @@ class Blob {
             this.folds.children.forEach(fold => {
                 const loc = path.getNearestLocation(fold.firstSegment.point)
                 if (loc.point.getDistance(fold.firstSegment.point) > 3) return
-                let startOffset = loc.offset - 30
+                let startOffset = loc.offset - 10
                 if (startOffset < 0) startOffset = path.length + startOffset
                 const points = []
-                for (let i = startOffset; i < startOffset + 60; i += 5) {
+                for (let i = startOffset; i < startOffset + 20; i += 5) {
                     points.push(path.getPointAt(i % path.length))
                 }
                 const pathToDraw = new Path(points)
                 const tangentStength = random(10, 20)
                 pathToDraw.add(new Segment(
-                    fold.lastSegment.point, 
-                    fold.lastSegment.location.tangent.multiply(-tangentStength), 
+                    fold.lastSegment.point,
+                    fold.lastSegment.location.tangent.multiply(-tangentStength),
                     fold.lastSegment.location.tangent.multiply(-tangentStength)))
                 pathToDraw.closePath()
                 pathToDraw.waterColor(clr, this)
                 this.foldShadows.addChild(pathToDraw)
+            })
+        })
+
+        this.apply(path=>{
+            path.segments.forEach(seg => {
+                if (path.contains(seg.point.add(seg.handleIn.normalize(5).multiply(-1))) && 
+                    path.contains(seg.point.add(seg.handleOut.normalize(5).multiply(-1)))) {
+                    
+                    const anotherShadow = new Path.Circle(seg.point, max(seg.handleIn.length, seg.handleOut.length))
+                    anotherShadow.waterColor(clr, this)
+                }
             })
         })
     }
@@ -126,14 +170,15 @@ class Blob {
                     } else {
                         const largeHandle = seg.handleIn.length > seg.handleOut.length ? seg.handleIn.clone() : seg.handleOut.clone()
                         largeHandle.angle -= 180
-                        largeHandle.length = random(10, 40)
+                        largeHandle.length *= random(1,3)
 
                         if (path.contains(seg.point.add(largeHandle))) {
                             const seg1 = new Segment(seg.point, null, largeHandle)
                             largeHandle.angle -= 10
                             const seg2 = new Segment(seg.point.add(largeHandle))
                             const fold = new Path([seg1, seg2])
-                            this.folds.addChild(fold)
+                            if (path.contains(fold.getPointAt(fold.length/2)) && path.contains(fold.lastSegment.point)) this.folds.addChild(fold)
+                            else fold.remove()
                         }
                     }
                 }
@@ -142,14 +187,13 @@ class Blob {
                 const handlePos1 = seg.point.add(seg.handleIn)
                 const handlePos2 = seg.point.add(seg.handleOut)
                 if (path.contains(handlePos1) && path.contains(handlePos2)) {
-                    const seg1 = new Segment(seg.point, null, seg.location.normal.multiply(-10).rotate(random(-30,30)))
-                    const seg2 = new Segment(seg.point.add(seg.location.normal.multiply(-random(5,10    ))))
+                    const seg1 = new Segment(seg.point, null, seg.location.normal.multiply(-10).rotate(random(-30, 30)))
+                    const seg2 = new Segment(seg.point.add(seg.location.normal.multiply(-random(5, 10))))
                     const fold = new Path([seg1, seg2])
                     this.folds.addChild(fold)
                 }
             })
         })
-
 
         this.folds.strokeColor = pencil
     }
@@ -186,9 +230,90 @@ class Blob {
 
     dropShadowOn(blob, clr) {
         this.getPaths().forEach(path => {
-            const b = path.clone().wonky(1.5, 2)
+            const b = path.clone().wonky(1,1.5)
             b.waterColor(clr, blob)
             b.remove()
         })
     }
+
+    drawSpots() {
+        this.spots = new Group()
+        this.group.addChild(this.spots)
+        for (let i = 0; i < 100; i++) {
+            const p = this.randomInside()
+            const s = new Path.Circle(p, 3).wonky(0.5, 2)
+            s.waterColor(choose([blobShadow,blobHighlight,blobColor]), this)
+            if (this.path.getNearestPoint(p).getDistance(p) < 40 && random() < .3) {
+                const trimmedS = s.intersect(this.path)
+                trimmedS.strokeColor = '#00000022'
+                trimmedS.data.withStroke = true
+                this.spots.addChild(trimmedS)
+                s.remove()
+            } else {
+                s.remove()
+            }
+        }
+    }
+
+    randomInside() {
+        let t = 0
+        while (t < 100) {
+            const loc = this.randomOnBorder()
+            const p = loc.point.add(loc.normal.multiply(random(-10, -100)))
+            if (this.path.contains(p)) {
+                return p
+            }
+            t++
+        }
+    }
+
+    drawHair() {
+        this.hair = new Group()
+        this.group.addChild(this.hair)
+        for (let i = 0; i < 30; i++) {
+            const outerPoint = this.path.bounds.topLeft.add(this.path.bounds.width * random(), 0)
+            const loc = this.path.getNearestLocation(outerPoint)
+            const path = new Path()
+            let pos = loc.point
+            let dir = loc.normal
+            const hairLength = random(3, 10)
+            for (let j=0;j<hairLength;j++){
+                path.add(pos.clone())
+                pos = pos.add(dir.multiply(random(4,10)))
+                dir = dir.rotate(random(-30,30))
+            }
+            path.smooth()
+            path.strokeColor = 'black'
+            this.hair.addChild(path)
+        }
+    }
+}
+
+
+function makeSpine(v1, v2) {
+    const dir = v2.subtract(v1).normalize().rotate(random(-90, 90)).multiply(150)
+    const seg1 = new Segment(v1, null, dir)
+    let path = new Path(seg1, v2)
+    path = path.rebuild(4)
+    for (let i = 1; i < path.segments.length - 1; i++) {
+        const seg = path.segments[i]
+        seg.point = seg.point.add(seg.location.normal.multiply(random(-30, 30)))
+    }
+    path.smooth()
+    return path
+}
+
+function Limb(p1, p2, r1, r2) {
+    const crv = makeSpine(p1, p2, 10)
+    blob = new Blob(new Path())
+    for (let i = 0; i < crv.length; i += crv.length / 20) {
+        const loc = crv.getLocationAt(i)
+        const currR = lerp(r1, r2, i / crv.length)
+        const p1 = loc.point.add(loc.normal.multiply(currR))
+        const c = new Path.Circle(p1, currR)
+        blob.join(new Blob(c))
+    }
+    blob.apply(crv => crv.simplify(30))
+    crv.remove()
+    return blob
 }

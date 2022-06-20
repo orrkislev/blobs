@@ -8,7 +8,7 @@ const CurveLocation = paper.CurveLocation
 const DIRS = { UP: new Point(0, -1), DOWN: new Point(0, 1), LEFT: new Point(-1, 0), RIGHT: new Point(1, 0) }
 const p = (x, y) => new Point(x, y)
 const randomPoint = () => new Point(random(-1, 1), random(-1, 1)).normalize()
-const pointFromAngle = (angle) => new Point(1, 0).rotate(angle)
+const pointFromAngle = (angle,size=1) => new Point(1, 0).rotate(angle).multiply(size)
 const positiveAngle = (angle) => angle > 0 ? angle : angle + 360
 
 paper.Path.prototype.getSection = function (from, to) {
@@ -36,7 +36,7 @@ paper.Path.prototype.getSection = function (from, to) {
     return result
 }
 
-function pointOnWhichPath(point,path1,path2){
+function pointOnWhichPath(point, path1, path2) {
     if (!path1) return path2
     if (!path2) return path1
     if (path1.getLocationOf(point)) return path1
@@ -63,28 +63,28 @@ paper.Path.prototype.offset = function (offset) {
 
 
 
-paper.Path.prototype.wonky = function (minVal = 0.8, maxVal = 1.2) {
-    this.simplify()
+paper.Path.prototype.wonky = function (minVal = 0.8, maxVal = 1.2, filterFunction = () => true) {
+    // this.simplify()
     const pos = this.position.clone()
     this.translate(-pos.x, -pos.y)
-    this.segments.forEach(p => {
+    this.segments.filter(filterFunction).forEach(p => {
         p.point = p.point.multiply(random(minVal, maxVal))
     })
     this.translate(pos.x, pos.y)
     return this
 }
-paper.Path.prototype.blocky = function () {
+paper.Path.prototype.blocky = function (minVal = .3, maxVal = 1) {
     for (let i = 0; i < this.length; i += random(20, 100)) {
         this.divideAt(i)
     }
-    this.segments.forEach(p => p.handleIn = p.handleIn.multiply(random(.3, 1)))
-    this.segments.forEach(p => p.handleOut = p.handleOut.multiply(random(.3, 1)))
+    this.segments.forEach(p => p.handleIn = p.handleIn.multiply(random(minVal, maxVal)))
+    this.segments.forEach(p => p.handleOut = p.handleOut.multiply(random(minVal, maxVal)))
     return this
 }
 
 
 paper.CompoundPath.prototype.waterColor = function (clr, parentPath) {
-    for (let i = 0; i < this.children.length; i++) this.children[i].waterColor(clr,parentPath)
+    for (let i = 0; i < this.children.length; i++) this.children[i].waterColor(clr, parentPath)
 }
 
 paper.Path.prototype.waterColor = function (clr, blob) {
@@ -93,66 +93,73 @@ paper.Path.prototype.waterColor = function (clr, blob) {
 
     const thisWidth = this.bounds.width
     const thisHeight = this.bounds.height
+    for (let j = 0; j < 6; j++) {
+        let mask
+        if (blob) mask = blob.getMask()
+        else mask = this.clone().rebuild(this.length / 20).deform(2)
+        const base = this.clone().rebuild(5).wonky().deform()
+        base.parent = paper.project.activeLayer
+        base.fillColor = null
+        base.strokeColor = null
+        for (let i = 0; i < 6; i++) {
+            let newShape = base.clone().deform(2)
 
-    const base = this.clone()
-    base.fillColor = null
-    base.strokeColor = null
-
-    for (let i = 0; i < 30; i++) {
-        let newShape = base.rebuild(10).deform(2)
-        if (blob) {
-            const newnewShape = newShape.intersect(blob.path)
-            newShape.remove()
-            newShape = newnewShape
+            if (blob) {
+                const newnewShape = newShape.intersect(mask)
+                newShape.remove()
+                newShape = newnewShape
+            }
+            const otherColor = new paper.Color(clr)
+            otherColor.alpha = .2
+            otherColor.brightness = min(otherColor.brightness + .4, 1)
+            otherColor.saturation = max(otherColor.saturation - .5, 0)
+            const origin = p(this.bounds.topLeft).add(random(thisWidth), random(thisHeight))
+            newShape.fillColor = {
+                gradient: {
+                    stops: [[waterColorClr, .3], [otherColor, 0]],
+                    radial: true
+                },
+                origin,
+                destination: origin.add(random(thisWidth), random(thisHeight))
+            }
+            const myGroup = blob ? blob.paintPaths : otherPaintPaths
+            myGroup.insertChild(round_random(myGroup.children.length), newShape)
         }
-        const otherColor = new paper.Color(clr)
-        otherColor.alpha = 0.03
-        otherColor.brightness = otherColor.brightness + .4
-        otherColor.saturation = otherColor.saturation - .5
-        const origin = p(this.bounds.topLeft).add(random(thisWidth), random(thisHeight))
-        newShape.fillColor = {
-            gradient: {
-                stops: [[waterColorClr, random(.6, .8)], [otherColor, 1]],
-                radial: true
-            },
-            origin,
-            destination: origin.add(random(thisWidth*2), random(thisHeight*2))
-        }
-        const myGroup = blob ? blob.paintPaths : otherPaintPaths
-        myGroup.insertChild(round_random(myGroup.children.length), newShape)
+        mask.remove()
+        base.remove()
     }
-    base.remove()
 }
 
-paper.Path.prototype.rebuild = function (numPoints) {
+paper.Path.prototype.rebuild = function (numPoints, randomRebuild = false) {
     numPoints = max(numPoints, this.segments.length)
-    const newPath = new paper.Path()
-    newPath.strokeColor = this.strokeColor
-    newPath.strokeWidth = this.strokeWidth
-    newPath.strokeCap = this.strokeCap
-    newPath.strokeJoin = this.strokeJoin
-    newPath.closed = this.closed
-    newPath.fillColor = this.fillColor
-    for (let i = 0; i < numPoints; i++) {
-        const point = this.getPointAt(i / numPoints * this.length)
-        newPath.add(point)
+    const sectionLength = this.length / numPoints
+    const newPoints = []
+    if (randomRebuild) {
+        for (let i = 0; i < this.length; i += sectionLength * random(2)) {
+            newPoints.push(this.getPointAt(i))
+        }
+    } else {
+        for (let i = 0; i < numPoints; i++) {
+            const point = this.getPointAt(i / numPoints * this.length)
+            newPoints.push(point)
+        }
     }
-    newPath.smooth()
-    return newPath
+    this.removeSegments()
+    this.addSegments(newPoints)
+    return this
 }
 
 paper.Path.prototype.deform = function (numTimes = 1) {
-    const deformed = this.clone()
     for (let deformTimes = 0; deformTimes < numTimes; deformTimes++) {
-        for (let i = 0; i < deformed.segments.length; i++) {
-            const seg1 = deformed.segments[i]
-            const seg2 = deformed.segments[(i + 1) % deformed.segments.length]
+        for (let i = 0; i < this.segments.length; i++) {
+            const seg1 = this.segments[i]
+            const seg2 = this.segments[(i + 1) % this.segments.length]
             const dist = seg1.point.getDistance(seg2.point)
             if (dist < 1) continue
             const offset1 = seg1.location.offset
             const offset2 = seg2.location.offset
-            const middleOffset = offset2 > offset1 ? (offset1 + offset2) / 2 : ((offset2 + deformed.length + offset1) / 2) % deformed.length
-            const newSeg = deformed.divideAt(middleOffset)
+            const middleOffset = offset2 > offset1 ? (offset1 + offset2) / 2 : ((offset2 + this.length + offset1) / 2) % this.length
+            const newSeg = this.divideAt(middleOffset)
             if (newSeg) {
                 const noiseVal = noise(newSeg.point.x / 200, newSeg.point.y / 200) * 8
                 const moveOffset = p(0, 1).rotate(random(360)).multiply(dist / noiseVal)
@@ -161,5 +168,18 @@ paper.Path.prototype.deform = function (numTimes = 1) {
             i++
         }
     }
-    return deformed
+    return this
+}
+
+function getOrderedIntersections(path, paths) {
+    if (!paths) paths = paper.project.activeLayer.children
+    let intersections = []
+    paths.forEach(p => {
+        if (p.strokeColor==null) return
+        if (p instanceof Path || p instanceof CompoundPath)
+            intersections.push(path.getIntersections(p, intersection => intersection.offset > 3 && intersection.offset < path.length - 3))
+    })
+    intersections = intersections.flat()
+    intersections.sort((a, b) => a.offset - b.offset)
+    return intersections
 }
