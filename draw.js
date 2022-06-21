@@ -10,7 +10,7 @@ function drawDotXY(x, y, opacity = 1) {
     allDots++
     nx += nxs
     nx2 += nxs2
-    stroke(40+noise(nx2+0.5)*40, (noise(nx2)*60+100) * opacity)
+    stroke((40+noise(nx2+0.5)*40)/pencilMultiplier, (noise(nx2)*60+100) * opacity)
     strokeWeight((2 + noise(nx) * 2) * pixelSize)
     line(x, y, x, y)
     if (random() < 0.1) {

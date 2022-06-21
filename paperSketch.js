@@ -1,4 +1,5 @@
 let pencil = '#444'
+const pencilMultiplier = random(1,2.5)**2
 
 const colors = ['#914E72', '#0078BF', '#00A95C', '#3255A4', '#F15060', '#765BA7', '#00838A', '#FF665E', '#FFE800', '#FF6C2F', '#E45D50', '#FF7477', '#62A8E5', '#4982CF', '#19975D', '#00AA93', '#62C2B1', '#67B346', '#009DA5', '#169B62', '#9D7AD2', '#BB76CF', '#F65058', '#6C5D80', '#D2515E', '#B44B65', '#E3ED55', '#FFB511', '#FFAE3B', '#F6A04D', '#FF6F4C', '#F2CDCF', '#F984CA', '#FF8E91', '#5EC8E5', '#82D8D5', '#FF4C65']
 
@@ -13,7 +14,7 @@ const withFloor = random() < 0.8
 const withCrutches = withFloor
 const numRocks = round_random(1, 10)
 const withColor = true
-const withShadow = withFloor && random() < 0.5
+const withShadow = withFloor && random() < 0.7
 
 async function makeImage() {
     blobColor = choose(colors)
@@ -57,6 +58,10 @@ async function makeImage() {
 
     if (withCrutches) crutches(mainBlob)
 
+    floorBlob.path.remove()
+    floorHeight += p(width/2,height/2).subtract(mainBlob.path.bounds.center).y
+    secondLayer.translate(p(width/2,height/2).subtract(mainBlob.path.bounds.center))
+
     // -----------------------------------------------------------------------------
 
 
@@ -97,17 +102,23 @@ async function makeImage() {
     linesImg = get()
     clear()
 
+    const prevWidth = width
     resizeCanvas(min(windowWidth, windowHeight), min(windowWidth, windowHeight))
-
-    const imageScale = Math.min(width / img.width, height / img.height)
-    const imageX = withSilkScreenOffset ? random(-5, 5)*(width/1000) : 0
-    const imageY = height - img.height * imageScale + (withSilkScreenOffset ? random(-5, 5) : 0)
-    if (withColor) image(img, imageX, imageY, img.width * imageScale, img.height * imageScale)
+    const rescaleRatio = width/prevWidth
+    background('#ddd')
+    
+    if (withColor){
+        const imageX = img.bounds.topLeft.x*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
+        const imageY = img.bounds.topLeft.y*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
+        image(img, imageX, imageY, img.bounds.width * rescaleRatio, img.bounds.height * rescaleRatio)
+    }
     image(linesImg, 0, 0, width, height)
 
     loadPixels()
     for (let i = 0; i < pixels.length; i += 4) {
-        const val = random(25 * pixelDensity())
+        const x = (i / 4) % width - width/2
+        const y = Math.floor((i / 4) / width)
+        const val = random(25 * pixelDensity()) - noise(x/500/pixelDensity(), y/500/pixelDensity())*20
         pixels[i] += val
         pixels[i + 1] += val
         pixels[i + 2] += val
