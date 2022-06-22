@@ -1,5 +1,6 @@
 let pencil = '#444'
 const pencilMultiplier = random(1,2.5)**2
+const pencilThickness = random(1,1.5)
 
 const colors = ['#914E72', '#0078BF', '#00A95C', '#3255A4', '#F15060', '#765BA7', '#00838A', '#FF665E', '#FFE800', '#FF6C2F', '#E45D50', '#FF7477', '#62A8E5', '#4982CF', '#19975D', '#00AA93', '#62C2B1', '#67B346', '#009DA5', '#169B62', '#9D7AD2', '#BB76CF', '#F65058', '#6C5D80', '#D2515E', '#B44B65', '#E3ED55', '#FFB511', '#FFAE3B', '#F6A04D', '#FF6F4C', '#F2CDCF', '#F984CA', '#FF8E91', '#5EC8E5', '#82D8D5', '#FF4C65']
 
@@ -15,6 +16,7 @@ const withCrutches = withFloor
 const numRocks = round_random(1, 10)
 const withColor = true
 const withShadow = withFloor && random() < 0.7
+const withLips = random()<0.2
 
 async function makeImage() {
     blobColor = choose(colors)
@@ -80,17 +82,19 @@ async function makeImage() {
     }
 
     mainBlob.drawCurvesp5()
+
     balls.drawCurvesp5()
     rocks.drawCurvesp5()
     if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
-    eye1.drawCurvesp5()
-    eye2.drawCurvesp5()
     if (withBlackEyes) {
         fillPath(eye1.path, pencil)
         fillPath(eye2.path, pencil)
         eyeLights.forEach(light => fillPath(light, 'white'))
     }
+    eye2.drawCurvesp5()
+    eye1.drawCurvesp5()
     drawPath(mouth)
+    if (withLips) drawPath(lips)
     if (withPupils) {
         fillPath(pupil1, pencil)
         fillPath(pupil2, pencil)
@@ -99,13 +103,14 @@ async function makeImage() {
     }
     if (withMoss) moss.drawCurvesp5()
     drawPath(faceContainer)
+
     linesImg = get()
     clear()
 
     const prevWidth = width
     resizeCanvas(min(windowWidth, windowHeight), min(windowWidth, windowHeight))
     const rescaleRatio = width/prevWidth
-    background('#ddd')
+    background('#fee')
     
     if (withColor){
         const imageX = img.bounds.topLeft.x*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
@@ -118,7 +123,7 @@ async function makeImage() {
     for (let i = 0; i < pixels.length; i += 4) {
         const x = (i / 4) % width - width/2
         const y = Math.floor((i / 4) / width)
-        const val = random(25 * pixelDensity()) - noise(x/500/pixelDensity(), y/500/pixelDensity())*20
+        const val = random(25 * pixelDensity()) - noise(x/500/pixelDensity(), y/500/pixelDensity())*10*pixelDensity()
         pixels[i] += val
         pixels[i + 1] += val
         pixels[i + 2] += val
@@ -274,6 +279,7 @@ function drawFace() {
 
     mouth.strokeColor = pencil
     mouth.translate(0, 15)
+    if (withLips) lips = new Path.Circle(mouth.getPointAt(mouth.length/2), random(3,8)).wonky()
 }
 
 function crutches(blob, obstacles) {
