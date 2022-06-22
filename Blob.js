@@ -305,10 +305,21 @@ function makeSpine(v1, v2) {
 
 function Limb(p1, p2, r1, r2) {
     const crv = makeSpine(p1, p2, 10)
+    return crvToBlob(crv,r1,r2)
+}
+
+function crvToBlob(crv,r1,r2){
     blob = new Blob(new Path())
-    for (let i = 0; i < crv.length; i += crv.length / 20) {
+    for (let i = 0; i < crv.length; i += 20) {
         const loc = crv.getLocationAt(i)
         const currR = lerp(r1, r2, i / crv.length)
+        const p1 = loc.point.add(loc.normal.multiply(currR))
+        const c = new Path.Circle(p1, currR)
+        blob.join(new Blob(c))
+    }
+    for (let i=0;i<crv.segments.length;i++){
+        const loc = crv.segments[i].location
+        const currR = lerp(r1, r2, loc.offset / crv.length)
         const p1 = loc.point.add(loc.normal.multiply(currR))
         const c = new Path.Circle(p1, currR)
         blob.join(new Blob(c))
@@ -316,4 +327,13 @@ function Limb(p1, p2, r1, r2) {
     blob.apply(crv => crv.simplify(30))
     crv.remove()
     return blob
+}
+
+function addLetterBlob(ps){
+    const path = new Path(ps)
+    path.rebuild(ps.length+3)
+    path.segments.forEach(seg=>seg.point = seg.point.add(random(-10,10), random(-10,10)))
+    path.smooth()
+    path.translate(width/2,floorHeight)
+    mainBlob.join(crvToBlob(path, 40, 40))
 }

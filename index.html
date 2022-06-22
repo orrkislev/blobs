@@ -29,13 +29,13 @@
     //---- /do not edit the following code
   </script>
 
-<script language="javascript" type="text/javascript" src="./library/paper-full.min.js"></script>
+  <script language="javascript" type="text/javascript" src="./library/paper-full.min.js"></script>
   <script language="javascript" type="text/javascript" src="./library/p5.min.js"></script>
   <script language="javascript" type="text/javascript" src="./utils.js"></script>
   <script language="javascript" type="text/javascript" src="./geometry.js"></script>
   <script language="javascript" type="text/javascript" src="./draw.js"></script>
 
-  <script language="javascript" type="text/javascript" src="Blob.js"></script>
+  <script language="javascript" type="text/javascript" src="./Blob.js"></script>
 </head>
 
 <style>
@@ -49,19 +49,18 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);      
-    border-radius: 9999px;
     overflow: hidden;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    display: none;
+    width: 10em;
   }
 </style>
 
 <body style="margin:0">
+  <img src="./loading.gif" id="loading" />
   <main>
     <canvas id="paperCanvas"></canvas>
   </main>
-  <script type="text/javascript" src="setup.js"></script>
-  <script type="text/javascript" src="paperSketch.js"></script>
+  <script type="text/javascript" src="./setup.js"></script>
+  <script type="text/javascript" src="./paperSketch.js"></script>
 </body>
 </html>
 

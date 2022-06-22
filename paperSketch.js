@@ -1,6 +1,6 @@
 let pencil = '#444'
-const pencilMultiplier = random(1,2.5)**2
-const pencilThickness = random(1,1.5)
+const pencilMultiplier = random(1,2)
+const pencilThickness = random(1,1.3)
 
 const colors = ['#914E72', '#0078BF', '#00A95C', '#3255A4', '#F15060', '#765BA7', '#00838A', '#FF665E', '#FFE800', '#FF6C2F', '#E45D50', '#FF7477', '#62A8E5', '#4982CF', '#19975D', '#00AA93', '#62C2B1', '#67B346', '#009DA5', '#169B62', '#9D7AD2', '#BB76CF', '#F65058', '#6C5D80', '#D2515E', '#B44B65', '#E3ED55', '#FFB511', '#FFAE3B', '#F6A04D', '#FF6F4C', '#F2CDCF', '#F984CA', '#FF8E91', '#5EC8E5', '#82D8D5', '#FF4C65']
 
@@ -17,8 +17,9 @@ const numRocks = round_random(1, 10)
 const withColor = true
 const withShadow = withFloor && random() < 0.7
 const withLips = random()<0.2
+const withFace = true
 
-async function makeImage() {
+function makeImage() {
     blobColor = choose(colors)
     blobShadow = choose(colors)
     blobShadow2 = choose(colors)
@@ -36,12 +37,14 @@ async function makeImage() {
 
     // ----------------------------------------------------------------------------
 
-    floorHeight = height * .7
+    floorHeight = height * .65
     floorBlob = new Blob(new Path.Rectangle(p(0, floorHeight), p(width, height)))
     centerPoint = p(width / 2, height * .5)
     lightSource = p(random(width), 0)
 
     makeMainBlob()
+    // makeLetter()
+    // makeAnimationBlob()
     makeBalls()
 
     balls.paint(ballsColor)
@@ -54,7 +57,7 @@ async function makeImage() {
     mainBlob.drawSpots()
     if (withHair) mainBlob.drawHair()
     
-    drawFace()
+    if (withFace) drawFace()
     if (withMoss) makeMoss()
     drawRocks()
 
@@ -86,23 +89,25 @@ async function makeImage() {
     balls.drawCurvesp5()
     rocks.drawCurvesp5()
     if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
+
+    if (withFace){
     if (withBlackEyes) {
-        fillPath(eye1.path, pencil)
-        fillPath(eye2.path, pencil)
-        eyeLights.forEach(light => fillPath(light, 'white'))
-    }
-    eye2.drawCurvesp5()
-    eye1.drawCurvesp5()
-    drawPath(mouth)
-    if (withLips) drawPath(lips)
-    if (withPupils) {
-        fillPath(pupil1, pencil)
-        fillPath(pupil2, pencil)
-        drawPath(pupil1)
-        drawPath(pupil2)
+            fillPath(eye1.path, pencil)
+            fillPath(eye2.path, pencil)
+            eyeLights.forEach(light => fillPath(light, 'white'))
+        }
+        eye2.drawCurvesp5()
+        eye1.drawCurvesp5()
+        drawPath(mouth)
+        if (withLips) drawPath(lips)
+        if (withPupils) {
+            fillPath(pupil1, pencil)
+            fillPath(pupil2, pencil)
+            drawPath(pupil1)
+            drawPath(pupil2)
+        }
     }
     if (withMoss) moss.drawCurvesp5()
-    drawPath(faceContainer)
 
     linesImg = get()
     clear()
@@ -130,6 +135,30 @@ async function makeImage() {
     }
 
     updatePixels()
+
+    document.getElementById("loading").style.display = "none"
+}
+
+function makeAnimationBlob(){
+    pos = centerPoint.add(0,20)
+    mainBlob = new Blob(new Path.Circle(pos, 10).wonky().blocky(.5, 1))
+    cutWithFloor(mainBlob)
+    mainBlob.path.translate(0, -8)
+}
+
+function makeLetter(){
+    mainBlob = new Blob(new Path())
+    addLetterBlob([p(-200,-400),p(-150,-50), p(0,0), p(150,-50), p(200,-500)])
+
+
+    const numLumps = round_random(1, 10)
+    for (let i = 0; i < numLumps; i++) {
+        const blob = new Blob(new Path.Circle(mainBlob.randomOnBorder().point, random(10, 20)).wonky())
+        mainBlob.join(blob)
+        blob.path.remove()
+    }
+    cutWithFloor(mainBlob)
+    mainBlob.path.translate(0, -8)
 }
 
 function makeMainBlob() {
@@ -139,7 +168,8 @@ function makeMainBlob() {
 
     const mainBlobSize = 160
     mainBlob = new Blob(new Path.Circle(centerPoint, mainBlobSize * random(.5, 1)).wonky().blocky(.5, 1))
-    for (let i = 0; i < 5; i++) {
+    const sumMainLumps = round_random(2,5)
+    for (let i = 0; i < sumMainLumps; i++) {
         const positionOffset = p(mainBlobSize * random(-1, 1), mainBlobSize * random(-1, 1))
         const size = mainBlobSize * random(.5, 1)
         const shape = new Path.Circle(centerPoint.add(positionOffset), size).wonky().blocky(.5, 1)
@@ -196,7 +226,7 @@ function drawRocks() {
         blob.path.remove()
     }
     cutWithFloor(rocks)
-    rocks.cut(faceContainer)
+    if (withFace) rocks.cut(faceContainer)
     rocks.paint(rockColor)
     rocks.path.bringToFront()
     // rocks.shadows(0, '#555')
@@ -358,7 +388,7 @@ function makeMoss() {
         const blob = new Blob(new Path.Circle(moss.randomOnBorder(), random(5, 15)).wonky())
         moss.join(blob)
     }
-    moss.cut(faceContainer)
+    if (withFace) moss.cut(faceContainer)
     moss.paint(rockColor)
     moss.dropShadowOn(mainBlob, blobShadow)
 }

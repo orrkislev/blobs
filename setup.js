@@ -15,5 +15,8 @@ function setup(){
         BOTTOM_RIGHT: p(width*1.2, height*1.2)
     }
 
+    noiseSeed(round_random(100000))
+
+    noLoop()
     makeImage()
 }
