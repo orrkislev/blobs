@@ -110,7 +110,7 @@ async function makeImage() {
     const prevWidth = width
     resizeCanvas(min(windowWidth, windowHeight), min(windowWidth, windowHeight))
     const rescaleRatio = width/prevWidth
-    background('#fee')
+    background('#fff5f1')
     
     if (withColor){
         const imageX = img.bounds.topLeft.x*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
