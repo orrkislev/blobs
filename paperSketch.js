@@ -18,6 +18,8 @@ const withColor = true
 const withShadow = withFloor && random() < 0.7
 const withLips = random()<0.2
 const withFace = true
+const doubleFace = random()<0.1
+const tripleFace = doubleFace && random()<0.1
 
 function makeImage() {
     blobColor = choose(colors)
@@ -57,7 +59,10 @@ function makeImage() {
     mainBlob.drawSpots()
     if (withHair) mainBlob.drawHair()
     
-    if (withFace) drawFace()
+    if (withFace) new Face()
+    if (doubleFace) new Face()
+    if (tripleFace) new Face()
+    
     if (withMoss) makeMoss()
     drawRocks()
 
@@ -92,23 +97,8 @@ function makeImage() {
     rocks.drawCurvesp5()
     if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
 
-    if (withFace){
-        eye2.drawCurvesp5()
-        eye1.drawCurvesp5()
-        if (withBlackEyes) {
-            fillPath(eye1.path, pencil)
-            fillPath(eye2.path, pencil)
-            eyeLights.forEach(light => fillPath(light, 'white'))
-        }
-        drawPath(mouth)
-        if (withLips) drawPath(lips)
-        if (withPupils) {
-            fillPath(pupil1, pencil)
-            fillPath(pupil2, pencil)
-            drawPath(pupil1)
-            drawPath(pupil2)
-        }
-    }
+    if (withFace) faces.forEach(face => face.drawp5())
+
     if (withMoss) moss.drawCurvesp5()
 
     // -----------------------------------------------------------------------------
