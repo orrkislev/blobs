@@ -4,7 +4,7 @@ const pencilThickness = random(1,1.3)
 
 const colors = ['#914E72', '#0078BF', '#00A95C', '#3255A4', '#F15060', '#765BA7', '#00838A', '#FF665E', '#FFE800', '#FF6C2F', '#E45D50', '#FF7477', '#62A8E5', '#4982CF', '#19975D', '#00AA93', '#62C2B1', '#67B346', '#009DA5', '#169B62', '#9D7AD2', '#BB76CF', '#F65058', '#6C5D80', '#D2515E', '#B44B65', '#E3ED55', '#FFB511', '#FFAE3B', '#F6A04D', '#FF6F4C', '#F2CDCF', '#F984CA', '#FF8E91', '#5EC8E5', '#82D8D5', '#FF4C65']
 
-const withBlackEyes = random() < 0.08
+const withBlackEyes = random() < 0.1
 const withPupils = !withBlackEyes && random() < 0.65
 const withLookAway = withPupils && random() < 0.3
 const withSilkScreenOffset = random() < 0.5
@@ -93,13 +93,13 @@ function makeImage() {
     if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
 
     if (withFace){
-    if (withBlackEyes) {
+        eye2.drawCurvesp5()
+        eye1.drawCurvesp5()
+        if (withBlackEyes) {
             fillPath(eye1.path, pencil)
             fillPath(eye2.path, pencil)
             eyeLights.forEach(light => fillPath(light, 'white'))
         }
-        eye2.drawCurvesp5()
-        eye1.drawCurvesp5()
         drawPath(mouth)
         if (withLips) drawPath(lips)
         if (withPupils) {
