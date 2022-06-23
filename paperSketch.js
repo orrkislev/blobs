@@ -43,8 +43,6 @@ function makeImage() {
     lightSource = p(random(width), 0)
 
     makeMainBlob()
-    // makeLetter()
-    // makeAnimationBlob()
     makeBalls()
 
     balls.paint(ballsColor)
@@ -137,28 +135,8 @@ function makeImage() {
     updatePixels()
 
     document.getElementById("loading").style.display = "none"
-}
 
-function makeAnimationBlob(){
-    pos = centerPoint.add(0,20)
-    mainBlob = new Blob(new Path.Circle(pos, 10).wonky().blocky(.5, 1))
-    cutWithFloor(mainBlob)
-    mainBlob.path.translate(0, -8)
-}
-
-function makeLetter(){
-    mainBlob = new Blob(new Path())
-    addLetterBlob([p(-200,-400),p(-150,-50), p(0,0), p(150,-50), p(200,-500)])
-
-
-    const numLumps = round_random(1, 10)
-    for (let i = 0; i < numLumps; i++) {
-        const blob = new Blob(new Path.Circle(mainBlob.randomOnBorder().point, random(10, 20)).wonky())
-        mainBlob.join(blob)
-        blob.path.remove()
-    }
-    cutWithFloor(mainBlob)
-    mainBlob.path.translate(0, -8)
+    fxpreview()
 }
 
 function makeMainBlob() {
@@ -391,29 +369,4 @@ function makeMoss() {
     if (withFace) moss.cut(faceContainer)
     moss.paint(rockColor)
     moss.dropShadowOn(mainBlob, blobShadow)
-}
-
-function extra() {
-    // const loc = mainBlob.randomOnBorder()
-    // cutPath = new Path.Circle(loc.point, random(20, 40)).wonky()
-    // ball = new Blob(cutPath)
-    // mainBlob.cut(ball)
-
-    // const orderedIntersections = getOrderedIntersections(mainBlob.path, [cutPath])
-    // const firstOffset = orderedIntersections[0].offset
-    // const lastOffset = orderedIntersections[orderedIntersections.length - 1].offset
-    // const insidePath = new Path()
-    // for (let i = firstOffset; i < lastOffset; i += 5) {
-    //     const loc = orderedIntersections[0].path.getLocationAt(i)
-    //     insidePath.add(loc.point)
-    // }
-    // insidePath.closePath()
-    // const firstPoint = insidePath.firstSegment.point
-    // const lastPoint = insidePath.lastSegment.point
-    // insidePath.lastSegment.handleOut = firstPoint.subtract(lastPoint).multiply(.3).rotate(-random(20, 40))
-    // insidePath.firstSegment.handleIn = lastPoint.subtract(firstPoint).multiply(.3).rotate(random(20, 40))
-    // blob = new Blob(insidePath)
-    // blob.paint('#000')
-    // blob.spots()
-    // blob.group.insertBelow(mainBlob.group)
 }
