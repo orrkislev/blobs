@@ -17,7 +17,8 @@ function makeMainBlob() {
     }
 
     if (withGidul) {
-        const pos = mainBlob.randomOnBorder().point
+        const loc = mainBlob.randomOnBorder()
+        const pos = loc.point.subtract(loc.normal.multiply(40))
         const limb = Limb(pos, pos.add(pointFromAngle(random(360)).multiply(random(200, 400))), random(20, 40), random(10, 20))
         if (random() < 0.5)
             for (let i = 0; i < 50; i++) {

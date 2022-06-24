@@ -18,7 +18,7 @@ const withColor = true
 const withShadow = withFloor && random() < 0.7
 const withLips = random()<0.2
 const withFace = true
-const doubleFace = random()<0.05
+const doubleFace = random()<0.07
 const tripleFace = doubleFace && random()<0.1
 
 function makeImage() {
