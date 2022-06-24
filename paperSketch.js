@@ -11,7 +11,7 @@ const withSilkScreenOffset = random() < 0.5
 const withMoss = random() < 0.5
 const withHair = false
 const numBalls = round_random(0, 3)
-const withFloor =  random() < 0.8
+const withFloor = false //  random() < 0.8
 const withCrutches = withFloor
 const numRocks = round_random(1, 10)
 const withColor = true
@@ -122,7 +122,7 @@ async function makeImage() {
     const prevWidth = width
     resizeCanvas(min(windowWidth, windowHeight), min(windowWidth, windowHeight))
     const rescaleRatio = width/prevWidth
-    background('#fff5f1')
+    background(255, 248, 245)
     
     if (withColor){
         const imageX = img.bounds.topLeft.x*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
