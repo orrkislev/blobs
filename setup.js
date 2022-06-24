@@ -1,11 +1,11 @@
-function setup(){
+async function setup(){
     canvas = createCanvas(1000, 1000)
     paperCanvas = document.getElementById('paperCanvas');
     paperCanvas.width = width;
     paperCanvas.height = height
     pixelSize = 1
     canvas.elt.style.display = 'none';
-    // paperCanvas.style.display = 'none';
+    paperCanvas.style.display = 'none';
     paper.setup(paperCanvas);
 
     CORNERS = {
@@ -18,5 +18,5 @@ function setup(){
     noiseSeed(round_random(100000))
 
     noLoop()
-    makeImage()
+    await makeImage()
 }

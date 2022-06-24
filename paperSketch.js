@@ -11,7 +11,7 @@ const withSilkScreenOffset = random() < 0.5
 const withMoss = random() < 0.5
 const withHair = false
 const numBalls = round_random(0, 3)
-const withFloor = random() < 0.8
+const withFloor = false // random() < 0.8
 const withCrutches = withFloor
 const numRocks = round_random(1, 10)
 const withColor = true
@@ -21,7 +21,7 @@ const withFace = true
 const doubleFace = random()<0.07
 const tripleFace = doubleFace && random()<0.1
 
-function makeImage() {
+async function makeImage() {
     blobColor = choose(colors)
     blobShadow = choose(colors)
     blobShadow2 = choose(colors)
@@ -40,6 +40,8 @@ function makeImage() {
     // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
+    await timeout(0)
+
 
     floorHeight = height * .65
     floorBlob = new Blob(new Path.Rectangle(p(0, floorHeight), p(width, height)))
@@ -48,16 +50,21 @@ function makeImage() {
 
     makeMainBlob()
     makeBalls()
+    await timeout(0)
+
 
     balls.paint(ballsColor)
     mainBlob.paint(blobColor)
     mainBlob.shadows(-20, blobShadow)
     mainBlob.shadows(20, blobShadow)
     mainBlob.shadows(180, blobHighlight)
+    await timeout(0)
+
     mainBlob.doFoldShadows(blobShadow2)
     balls.dropShadowOn(mainBlob, blobShadow2)
     mainBlob.drawSpots()
     if (withHair) mainBlob.drawHair()
+    await timeout(0)
     
     if (withFace) new Face()
     if (doubleFace) new Face()
@@ -65,23 +72,23 @@ function makeImage() {
 
     if (withMoss) makeMoss()
     drawRocks()
+    await timeout(0)
 
     if (withCrutches) crutches(mainBlob)
 
     floorBlob.path.remove()
     floorHeight += p(width/2,height/2).subtract(mainBlob.path.bounds.center).y
     secondLayer.translate(p(width/2,height/2).subtract(mainBlob.path.bounds.center))
+    await timeout(0)
 
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
-
-
-    canvas.elt.style.display = 'block';
-    paperCanvas.style.display = 'none';
 
     paper.project.activeLayer.children.forEach(child => child.strokeColor = null)
     img = paper.project.activeLayer.rasterize()
+    await timeout(0)
+
 
     if (withShadow){
         shadowPath = new Path.Circle(p(mainBlob.path.bounds.center.x, floorHeight), mainBlob.path.bounds.width/2)
@@ -92,14 +99,18 @@ function makeImage() {
     }
 
     mainBlob.drawCurvesp5()
+    await timeout(0)
+
 
     balls.drawCurvesp5()
     rocks.drawCurvesp5()
+    
     if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
 
     if (withFace) faces.forEach(face => face.drawp5())
 
     if (withMoss) moss.drawCurvesp5()
+    await timeout(0)
 
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
@@ -119,6 +130,7 @@ function makeImage() {
         image(img, imageX, imageY, img.bounds.width * rescaleRatio, img.bounds.height * rescaleRatio)
     }
     image(linesImg, 0, 0, width, height)
+    await timeout(0)
 
     loadPixels()
     for (let i = 0; i < pixels.length; i += 4) {
@@ -132,6 +144,8 @@ function makeImage() {
     updatePixels()
 
     document.getElementById("loading").style.display = "none"
+    canvas.elt.style.display = 'block';
+    paperCanvas.style.display = 'none';
 
     fxpreview()
 }

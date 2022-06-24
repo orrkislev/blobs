@@ -63,7 +63,7 @@ class Blob {
     paint(fillColor) {
         this.initDraw()
         this.apply(path=>path.waterColor(fillColor, this))
-        this.apply(path=>path.waterColor(fillColor, this))
+        // this.apply(path=>path.waterColor(fillColor, this))
     }
 
     shadows(angleOffset, clr) {
