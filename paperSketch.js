@@ -11,14 +11,15 @@ const withSilkScreenOffset = random() < 0.5
 const withMoss = random() < 0.5
 const withHair = false
 const numBalls = round_random(0, 3)
-const withFloor = random() < 0.8
+const withFloor = random() < 0.82
+const withAirFlow = random() < 0.7
 const withCrutches = withFloor
-const numRocks = round_random(1, 10)
+const numRocks = withFloor ? round_random(1, 10) : round_random(3,6)
 const withColor = true
 const withShadow = withFloor && random() < 0.7
 const withLips = random()<0.2
 const withFace = true
-const doubleFace = random()<0.07
+const doubleFace = random()<0.1
 const tripleFace = doubleFace && random()<0.1
 
 async function makeImage() {
@@ -81,6 +82,8 @@ async function makeImage() {
     secondLayer.translate(p(width/2,height/2).subtract(mainBlob.path.bounds.center))
     await timeout(0)
 
+    if (!withFloor && withAirFlow) airFlow()
+
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
@@ -110,6 +113,8 @@ async function makeImage() {
     if (withFace) faces.forEach(face => face.drawp5())
 
     if (withMoss) moss.drawCurvesp5()
+
+    if (!withFloor && withAirFlow) airPaths.forEach(airPath => drawPath(airPath))
     await timeout(0)
 
     // -----------------------------------------------------------------------------

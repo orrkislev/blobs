@@ -65,7 +65,7 @@ function drawRocks() {
         blob.path.remove()
     }
     cutWithFloor(rocks)
-    if (withFace) faces.forEach(face=>rocks.cut(face.faceContainer))
+    if (withFace) faces.forEach(face => rocks.cut(face.faceContainer))
     rocks.paint(rockColor)
     rocks.path.bringToFront()
     // rocks.shadows(0, '#555')
@@ -147,7 +147,7 @@ function makeMoss() {
         const blob = new Blob(new Path.Circle(moss.randomOnBorder(), random(5, 15)).wonky())
         moss.join(blob)
     }
-    if (withFace) faces.forEach(face=>moss.cut(face.faceContainer))
+    if (withFace) faces.forEach(face => moss.cut(face.faceContainer))
     moss.paint(rockColor)
     moss.dropShadowOn(mainBlob, blobShadow)
 }
@@ -158,9 +158,9 @@ class Face {
         let locOnMain = mainBlob.randomOnBorder()
         this.faceContainer = new Path.Circle({ center: locOnMain.point.add(locOnMain.normal.multiply(random(-30, -80))), radius: 80 })
         let tries = 0
-        while (!mainBlob.path.contains(this.faceContainer.position) || 
-                this.faceContainer.getIntersections(balls.path).length != 0 || 
-                faces.filter(face=>!face.noFace).find(face=>face.faceContainer.path.position.getDistance(this.faceContainer.position) < 80)) {
+        while (!mainBlob.path.contains(this.faceContainer.position) ||
+            this.faceContainer.getIntersections(balls.path).length != 0 ||
+            faces.filter(face => !face.noFace).find(face => face.faceContainer.path.position.getDistance(this.faceContainer.position) < 80)) {
             locOnMain = mainBlob.randomOnBorder()
             this.faceContainer.position = locOnMain.point.add(locOnMain.normal.multiply(random(-30, -80)))
             if (tries++ > 100) {
@@ -240,7 +240,7 @@ class Face {
         faces.push(this)
     }
 
-    drawp5(){
+    drawp5() {
         if (this.noFace) return
         this.eye2.drawCurvesp5()
         this.eye1.drawCurvesp5()
@@ -258,4 +258,48 @@ class Face {
             drawPath(this.pupil2)
         }
     }
+}
+
+function airFlow() {
+    airPaths = []
+    const airFlow = pointFromAngle(random(75, 105))
+    rocks.apply(path => {
+        if (random() < 0.18) return
+        const airFlowOffset = (sqrt(path.bounds.width ** 2 + path.bounds.height ** 2) / 2) * random(1.2, 1.6)
+        const airFlowLength = random(50, 150)
+        const pos = path.position.add(airFlow.multiply(airFlowOffset))
+        const airPath = new Path.Line(pos, pos.add(airFlow.multiply(airFlowLength)))
+        airPaths.push(airPath)
+
+        const airPath2 = airPath.clone()
+        airPath2.position = airPath.position.add(airFlow.rotate(90).multiply(20)).add(airFlow.multiply(random(-5, 5)))
+        airPaths.push(airPath2)
+
+        if (random() < 0.5) {
+            const airPath3 = airPath.clone()
+            airPath3.position = airPath.position.subtract(airFlow.rotate(90).multiply(20)).add(airFlow.multiply(random(-5, 5)))
+            airPaths.push(airPath3)
+        } else {
+            airPath2.position = airPath2.position.subtract(airFlow.rotate(90).multiply(10))
+            airPath.position = airPath.position.subtract(airFlow.rotate(90).multiply(10))
+        }
+    })
+    airPaths.forEach(path => {
+        const intersections = getOrderedIntersections(path)
+        if (intersections.length > 0) {
+            const rest = path.splitAt(intersections[0].offset)
+            rest.remove()
+        }
+        path.segments = path.segments.filter(segment => {
+            const hitTests = paper.project.activeLayer.hitTestAll(segment.point)
+            return (hitTests.length == 1)
+        })
+    })
+
+    airPaths.forEach(path => {
+        path.splitAt(path.length * random(0.7, 1))
+        path.rebuild(ceil(path.length / 30))
+        path.segments.forEach(seg => seg.point = seg.point.add(p(random(-3, 3), random(-3, 3))))
+        path.smooth()
+    })
 }
