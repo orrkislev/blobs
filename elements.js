@@ -58,15 +58,24 @@ function makeBalls() {
 
 function drawRocks() {
     rocks = new Blob(new Path())
+    if (!withFloor) rocksUnder = new Blob(new Path())
     for (let i = 0; i < numRocks; i++) {
-        const pos = withFloor ? p(width * random(.3, .7), floorHeight) : centerPoint.add(pointFromAngle(random(360)).multiply(random(200, 400)))
+        const pos = withFloor ? p(width * random(.3, .7), floorHeight) : centerPoint.add(pointFromAngle(random(360)).multiply(random(200, 300)))
         const blob = new Blob(new Path.Circle(pos, random(20, 60)).wonky().blocky())
-        rocks.join(blob)
+        if (withFloor) rocks.join(blob)
+        else {
+            if (random()<0.5) rocks.join(blob)
+            else rocksUnder.join(blob)
+        }
         blob.path.remove()
     }
     cutWithFloor(rocks)
     if (withFace) faces.forEach(face => rocks.cut(face.faceContainer))
     rocks.paint(rockColor)
+    if (!withFloor) {
+        rocksUnder.paint(rockColor)
+        rocksUnder.group.sendToBack()
+    }
     rocks.path.bringToFront()
     // rocks.shadows(0, '#555')
 }
@@ -262,11 +271,12 @@ class Face {
 
 function airFlow() {
     airPaths = []
-    const airFlow = pointFromAngle(random(75, 105))
-    rocks.apply(path => {
-        if (random() < 0.18) return
+    const airFlow = pointFromAngle(random(70, 110))
+    const allRockPaths = [...rocks.getPaths(), ...rocksUnder.getPaths()]
+    allRockPaths.forEach(path => {
+        if (random() < 0.1) return
         const airFlowOffset = (sqrt(path.bounds.width ** 2 + path.bounds.height ** 2) / 2) * random(1.2, 1.6)
-        const airFlowLength = random(50, 150)
+        const airFlowLength = random(50, 500)
         const pos = path.position.add(airFlow.multiply(airFlowOffset))
         const airPath = new Path.Line(pos, pos.add(airFlow.multiply(airFlowLength)))
         airPaths.push(airPath)
@@ -294,11 +304,19 @@ function airFlow() {
             const hitTests = paper.project.activeLayer.hitTestAll(segment.point)
             return (hitTests.length == 1)
         })
+
+        for (let i=0;i<path.length;i+=10) {
+            const pos = path.getPointAt(i)
+            if (pos.x < 50 || pos.x > width - 50 || pos.y < 50 || pos.y > height - 50) {
+                path.splitAt(i)
+                break
+            }
+        }
     })
 
     airPaths.forEach(path => {
         path.splitAt(path.length * random(0.7, 1))
-        path.rebuild(ceil(path.length / 30))
+        path.rebuild(ceil(path.length / 50))
         path.segments.forEach(seg => seg.point = seg.point.add(p(random(-3, 3), random(-3, 3))))
         path.smooth()
     })

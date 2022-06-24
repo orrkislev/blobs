@@ -286,6 +286,7 @@ class Blob {
             path.strokeColor = 'black'
             this.hair.addChild(path)
         }
+        this.hair.children.forEach(hair=>drawPath(hair))
     }
 }
 

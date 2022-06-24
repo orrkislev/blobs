@@ -14,7 +14,7 @@ const numBalls = round_random(0, 3)
 const withFloor = random() < 0.82
 const withAirFlow = random() < 0.7
 const withCrutches = withFloor
-const numRocks = withFloor ? round_random(1, 10) : round_random(3,6)
+const numRocks = withFloor ? round_random(1, 10) : round_random(3,7)
 const withColor = true
 const withShadow = withFloor && random() < 0.7
 const withLips = random()<0.2
@@ -101,18 +101,19 @@ async function makeImage() {
         drawPath(shadowPath)
     }
 
+    if (!withFloor) rocksUnder.drawCurvesp5()
     mainBlob.drawCurvesp5()
     await timeout(0)
 
 
     balls.drawCurvesp5()
+    if (withMoss) moss.drawCurvesp5()
     rocks.drawCurvesp5()
     
     if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
 
     if (withFace) faces.forEach(face => face.drawp5())
 
-    if (withMoss) moss.drawCurvesp5()
 
     if (!withFloor && withAirFlow) airPaths.forEach(airPath => drawPath(airPath))
     await timeout(0)
