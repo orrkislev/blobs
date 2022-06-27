@@ -152,7 +152,7 @@ function makeMoss() {
         let pos = loc.path.getPointAt((loc.offset + random(-10, 10)) % loc.path.length)
         if (!pos) continue
         pos.add(0, 5)
-        const blob = new Blob(new Path.Circle(pos, random(5, 15)))
+        const blob = new Blob(new Path.Circle(pos, random(5, 15)).wonky())
         moss.join(blob)
         blob.path.remove()
     }

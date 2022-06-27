@@ -137,5 +137,5 @@ async function makeImage() {
     // refresh the page after 3 seconds
     setTimeout(function () {
         location.reload();
-    }, 3000);
+    }, 6000);
 }

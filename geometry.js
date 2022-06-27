@@ -87,6 +87,7 @@ paper.CompoundPath.prototype.waterColor = function (clr, parentPath) {
     for (let i = 0; i < this.children.length; i++) this.children[i].waterColor(clr, parentPath)
 }
 
+numWaterColorLayers = 0
 paper.Path.prototype.waterColor = async function (clr, blob, withTimeout = true) {
     if (clr == 'transparent') return
     const waterColorClr = new paper.Color(clr)
@@ -128,7 +129,8 @@ paper.Path.prototype.waterColor = async function (clr, blob, withTimeout = true)
         }
         mask.remove()
         base.remove()
-        if (withTimeout) await timeout(0)
+        numWaterColorLayers++
+        if (numWaterColorLayers%10 == 3) await timeout(0)
     }
 }
 
