@@ -56,7 +56,7 @@ function makeBalls() {
 }
 
 
-function drawRocks() {
+function makeRocks() {
     rocks = new Blob(new Path())
     if (!withFloor) rocksUnder = new Blob(new Path())
     for (let i = 0; i < numRocks; i++) {
@@ -71,13 +71,16 @@ function drawRocks() {
     }
     cutWithFloor(rocks)
     if (withFace) faces.forEach(face => rocks.cut(face.faceContainer))
-    rocks.paint(rockColor)
-    if (!withFloor) {
-        rocksUnder.paint(rockColor)
-        rocksUnder.group.sendToBack()
-    }
+}
+
+async function drawRocks(){
+    await rocks.paint(rockColor)
     rocks.path.bringToFront()
-    // rocks.shadows(0, '#555')
+}
+
+async function drawRocksUnder(){
+    await rocksUnder.paint(rockColor)
+    rocksUnder.group.sendToBack()
 }
 
 function crutches(blob, obstacles) {
@@ -119,7 +122,6 @@ function drawCrutch(path) {
             }
         }
         path.smooth()
-        path.strokeColor = pencil
         allCrutches.addChild(path)
         return
     }
@@ -147,7 +149,9 @@ function makeMoss() {
     for (let i = 0; i < 40; i++) {
         const outerPoint = mainBlob.path.bounds.topLeft.add(mainBlob.path.bounds.width * random(), 0)
         const loc = mainBlob.path.getNearestLocation(outerPoint)
-        const pos = loc.path.getPointAt((loc.offset + random(-10, 10)) % loc.path.length).add(0, 5)
+        let pos = loc.path.getPointAt((loc.offset + random(-10, 10)) % loc.path.length)
+        if (!pos) continue
+        pos.add(0, 5)
         const blob = new Blob(new Path.Circle(pos, random(5, 15)))
         moss.join(blob)
         blob.path.remove()
@@ -157,8 +161,10 @@ function makeMoss() {
         moss.join(blob)
     }
     if (withFace) faces.forEach(face => moss.cut(face.faceContainer))
-    moss.paint(rockColor)
-    moss.dropShadowOn(mainBlob, blobShadow)
+}
+async function drawMoss(){
+    await moss.paint(rockColor)
+    await moss.dropShadowOn(mainBlob, blobShadow)
 }
 
 const faces = []
@@ -203,14 +209,7 @@ class Face {
                 fold.remove()
             }
         })
-        // faceContainer.remove()
-        // faceContainer.fillColor = '#ff000055'
         this.faceContainer = new Blob(this.faceContainer)
-
-        this.eye1.paint('white')
-        this.eye2.paint('white')
-        this.eye1.dropShadowOn(mainBlob, blobShadow)
-        this.eye2.dropShadowOn(mainBlob, blobShadow)
 
         if (withPupils) {
             const pupilSize = random(5, 10)
@@ -243,28 +242,34 @@ class Face {
             ]
         }
 
-        this.mouth.strokeColor = pencil
         this.mouth.translate(0, 15)
         if (withLips) this.lips = new Path.Circle(this.mouth.getPointAt(this.mouth.length / 2), random(3, 8)).wonky()
         faces.push(this)
     }
 
-    drawp5() {
+    async paint(){
+        await this.eye1.paint('white')
+        await this.eye2.paint('white')
+        await this.eye1.dropShadowOn(mainBlob, blobShadow)
+        await this.eye2.dropShadowOn(mainBlob, blobShadow)
+    }
+
+    async drawp5() {
         if (this.noFace) return
-        this.eye2.drawCurvesp5()
-        this.eye1.drawCurvesp5()
+        await this.eye2.drawCurvesp5()
+        await this.eye1.drawCurvesp5()
         if (withBlackEyes) {
             fillPath(this.eye1.path, pencil)
             fillPath(this.eye2.path, pencil)
             this.eyeLights.forEach(light => fillPath(light, 'white'))
         }
-        drawPath(this.mouth)
+        await drawPath(this.mouth)
         if (withLips) drawPath(this.lips)
         if (withPupils) {
             fillPath(this.pupil1, pencil)
             fillPath(this.pupil2, pencil)
-            drawPath(this.pupil1)
-            drawPath(this.pupil2)
+            await drawPath(this.pupil1)
+            await drawPath(this.pupil2)
         }
     }
 }

@@ -6,8 +6,8 @@ nx = 0
 nxs = 0.06
 nx2 = 0
 nxs2 = 0.05
-function drawDotXY(x, y, opacity = 1) {
-    allDots++
+async function drawDotXY(x, y, opacity = 1) {
+    if (allDots++ % 20 == 0) await timeout(0)
     nx += nxs
     nx2 += nxs2
     stroke((40+noise(nx2+0.5)*40)/pencilMultiplier, (noise(nx2)*60+100) * opacity)
@@ -35,7 +35,13 @@ function timeout(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function waitForKey(key) {
+function waitForKey(ms, title) {
+    return
+    if (title) console.log(title)
+    return waitForKeyFunc(32).then(() => new Promise(resolve => setTimeout(resolve, max(ms, 100))))
+}
+
+function waitForKeyFunc(key) {
     return new Promise(resolve => {
         if (keyIsDown(key)) resolve()
         else window.addEventListener('keydown', e => {
@@ -55,14 +61,13 @@ function pathToPoints(path) {
     return ps
 }
 
-function drawPath(path, opacity = 1) {
-    path.strokeColor = 'black'
+async function drawPath(path, opacity = 1) {
     if (path.children) {
         path.children.forEach(drawPath)
         return 
     }
     const ps = pathToPoints(path)
-    ps.forEach(p => drawDotXY(p.x, p.y, opacity))
+    for (const p of ps) await drawDotXY(p.x, p.y, opacity)
 }
 function fillPath(path,clr) {
     if (clr) fill(clr)

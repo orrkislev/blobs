@@ -44,3 +44,9 @@ function applyRemove(func) {
     func()
     pop()
 }
+
+let startTime = 0
+function printTime(title){
+    console.log(title, performance.now() - startTime)
+    startTime = performance.now()
+}

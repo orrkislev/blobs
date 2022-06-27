@@ -33,64 +33,39 @@ async function makeImage() {
 
     otherPaintPaths = new paper.Group()
     const bg = new paper.Path.Rectangle(0, 0, width, height)
-    bg.fillColor = '#ddd'
+    bg.fillColor = '#fff8f5'
     bg.sendToBack()
-
     const secondLayer = new paper.Layer();
 
     // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
-    await timeout(0)
-
 
     floorHeight = height * .65
     floorBlob = new Blob(new Path.Rectangle(p(0, floorHeight), p(width, height)))
     centerPoint = p(width / 2, height * .5)
     lightSource = p(random(width), 0)
 
+    // ---- MAKE
+
     makeMainBlob()
     makeBalls()
-    await timeout(0)
-
-
-    balls.paint(ballsColor)
-    mainBlob.paint(blobColor)
-    mainBlob.shadows(-20, blobShadow)
-    mainBlob.shadows(20, blobShadow)
-    mainBlob.shadows(180, blobHighlight)
-    await timeout(0)
-
-    mainBlob.doFoldShadows(blobShadow2)
-    balls.dropShadowOn(mainBlob, blobShadow2)
-    mainBlob.drawSpots()
-    if (withHair) mainBlob.drawHair()
-    await timeout(0)
-    
+    mainBlob.drawFolds()
     if (withFace) new Face()
     if (doubleFace) new Face()
     if (tripleFace) new Face()
-
     if (withMoss) makeMoss()
-    drawRocks()
-    await timeout(0)
+    makeRocks()
 
-    if (withCrutches) crutches(mainBlob)
+    // ---- CETNER
 
     floorBlob.path.remove()
     floorHeight += p(width/2,height/2).subtract(mainBlob.path.bounds.center).y
     secondLayer.translate(p(width/2,height/2).subtract(mainBlob.path.bounds.center))
-    await timeout(0)
-
-    if (!withFloor && withAirFlow) airFlow()
 
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
-
-    paper.project.activeLayer.children.forEach(child => child.strokeColor = null)
-    img = paper.project.activeLayer.rasterize()
-    await timeout(0)
 
 
     if (withShadow){
@@ -98,43 +73,50 @@ async function makeImage() {
         shadowPath.scale(1,0.1)
         shadowPath.rebuild(10).wonky().smooth()
         fillPath(shadowPath, pencil)
-        drawPath(shadowPath)
     }
+    if (!withFloor) await rocksUnder.drawCurvesp5()
+    if (!withFloor) await drawRocksUnder()
 
-    if (!withFloor) rocksUnder.drawCurvesp5()
-    mainBlob.drawCurvesp5()
-    await timeout(0)
+    await mainBlob.drawCurvesp5()
+    await balls.drawCurvesp5()
+    await balls.paint(ballsColor)
+    await mainBlob.paint(blobColor)
+    await mainBlob.shadows(-20, blobShadow)
+    await mainBlob.shadows(20, blobShadow)
+    await mainBlob.shadows(180, blobHighlight)
+    await mainBlob.doFoldShadows(blobShadow2)
+    await balls.dropShadowOn(mainBlob, blobShadow2)
+    await mainBlob.drawSpots()
 
+    if (withMoss) await moss.drawCurvesp5()
+    if (withMoss) await drawMoss()
 
-    balls.drawCurvesp5()
-    if (withMoss) moss.drawCurvesp5()
-    rocks.drawCurvesp5()
+    await rocks.drawCurvesp5()
+    await drawRocks()
+
+    if (withFace) for (const face of faces) await face.drawp5()
+    for (const face of faces) await face.paint()
     
-    if (withCrutches) allCrutches.children.forEach(crutch => drawPath(crutch))
-
-    if (withFace) faces.forEach(face => face.drawp5())
-
-
-    if (!withFloor && withAirFlow) airPaths.forEach(airPath => drawPath(airPath))
-    await timeout(0)
-
+    if (withCrutches) crutches(mainBlob)
+    if (withCrutches) for (const crutch of allCrutches.children) await drawPath(crutch)
+    
+    if (!withFloor && withAirFlow) airFlow()
+    if (!withFloor && withAirFlow) for (const airPath of airPaths) await drawPath(airPath)
+    
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
     // -----------------------------------------------------------------------------
+
+    img = paper.project.activeLayer.rasterize()
+
 
     linesImg = get()
     clear()
 
-    const prevWidth = width
-    resizeCanvas(min(windowWidth, windowHeight), min(windowWidth, windowHeight))
-    const rescaleRatio = width/prevWidth
-    background(255, 248, 245)
-    
-    if (withColor){
-        const imageX = img.bounds.topLeft.x*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
-        const imageY = img.bounds.topLeft.y*rescaleRatio + (withSilkScreenOffset ? random(-5, 5) : 0)
-        image(img, imageX, imageY, img.bounds.width * rescaleRatio, img.bounds.height * rescaleRatio)
-    }
+    background(255, 248, 245)    
+    const imageX = img.bounds.topLeft.x + (withSilkScreenOffset ? random(-5, 5) : 0)
+    const imageY = img.bounds.topLeft.y + (withSilkScreenOffset ? random(-5, 5) : 0)
+    image(img, imageX, imageY, img.bounds.width, img.bounds.height)
     image(linesImg, 0, 0, width, height)
     await timeout(0)
 
@@ -149,9 +131,11 @@ async function makeImage() {
     }
     updatePixels()
 
-    document.getElementById("loading").style.display = "none"
-    canvas.elt.style.display = 'block';
-    paperCanvas.style.display = 'none';
+    // document.getElementById("loading").style.display = "none"
 
-    fxpreview()
+    // fxpreview()
+    // refresh the page after 3 seconds
+    setTimeout(function () {
+        location.reload();
+    }, 3000);
 }

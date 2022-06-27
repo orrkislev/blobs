@@ -56,10 +56,17 @@
     overflow: hidden;
     width: 10em;
   }
+  canvas{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);      
+    overflow: hidden;
+  }
 </style>
 
 <body style="margin:0">
-  <img src="./loading.gif" id="loading" />
+  <!-- <img src="./loading.gif" id="loading" /> -->
   <main>
     <canvas id="paperCanvas"></canvas>
   </main>

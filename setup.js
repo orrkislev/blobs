@@ -1,11 +1,11 @@
 async function setup() {
-    canvas = createCanvas(1000, 1000)
+    canvas = createCanvas(windowWidth, windowHeight)
     paperCanvas = document.getElementById('paperCanvas');
     paperCanvas.width = width;
     paperCanvas.height = height
     pixelSize = 1
-    canvas.elt.style.display = 'none';
-    paperCanvas.style.display = 'none';
+    // canvas.elt.style.display = 'none';
+    // paperCanvas.style.display = 'none';
     paper.setup(paperCanvas);
 
     CORNERS = {
